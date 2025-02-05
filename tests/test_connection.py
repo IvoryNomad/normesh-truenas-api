@@ -1,49 +1,99 @@
-# tests/test_connection.py
 import pytest
+import json
 import asyncio
-from unittest.mock import Mock, patch
-from truenas.connection import TrueNASConnection, AuthenticationError
-
-
-@pytest.fixture
-async def truenas_conn():
-    """Create a TrueNASConnection instance for testing."""
-    conn = TrueNASConnection("truenas.local", "fake-api-key")
-    yield conn
-    # Cleanup
-    await conn.disconnect()
+from unittest.mock import AsyncMock, patch
+from truenas_api.connection import TrueNASConnection, AuthenticationError
 
 
 @pytest.mark.asyncio
-async def test_successful_connection(truenas_conn):
-    """Test successful connection and authentication."""
-    with patch("websockets.connect") as mock_connect:
-        # Create mock websocket
-        mock_ws = Mock()
-        mock_ws.send = asyncio.coroutine(lambda x: None)
-        mock_ws.recv = asyncio.coroutine(lambda: '{"id": "1", "result": true}')
-        mock_connect.return_value = mock_ws
+async def test_successful_connection_with_handshake():
+    """Test the complete connection process including handshake and authentication."""
+    conn = TrueNASConnection("truenas.local", "fakeuser", "fakepassword")
 
-        await truenas_conn.connect()
-        assert truenas_conn.websocket is not None
+    # Create our mock websocket
+    mock_ws = AsyncMock()
+    session_id = "b4a4d164-6bc7-11e6-8a93-00e04d680384"
+
+    # Set up the responses for the websocket
+    mock_ws.recv.side_effect = [
+        # First response - handshake
+        json.dumps({"msg": "connected", "session": session_id}),
+        # Second response - authentication
+        json.dumps(
+            {
+                "id": session_id,
+                "msg": "result",
+                "result": True,
+            }
+        ),
+    ]
+
+    # Create an AsyncMock for the connect function itself
+    mock_connect = AsyncMock(return_value=mock_ws)
+
+    # Patch the connect function
+    with patch("websockets.connect", mock_connect):
+        await conn.connect()
+
+        # Verify connection state
+        assert conn.websocket is not None
+        assert conn.session_id == session_id
+
+        # Verify the messages we sent were correct
+        calls = mock_ws.send.call_args_list
+        assert len(calls) == 2  # Should have sent handshake and auth messages
+
+        # Check handshake message
+        handshake_msg = json.loads(calls[0].args[0])
+        assert handshake_msg == {"msg": "connect", "version": "1", "support": ["1"]}
+
+        # Check auth message
+        auth_msg = json.loads(calls[1].args[0])
+        assert auth_msg["id"] == session_id
+        assert auth_msg["msg"] == "method"
+        assert auth_msg["method"] == "auth.login"
+        assert auth_msg["params"] == ["fakeuser", "fakepassword"]
 
 
 @pytest.mark.asyncio
-async def test_failed_authentication(truenas_conn):
-    """Test handling of invalid API key."""
-    with patch("websockets.connect") as mock_connect:
-        mock_ws = Mock()
-        mock_ws.send = asyncio.coroutine(lambda x: None)
-        mock_ws.recv = asyncio.coroutine(
-            lambda: '{"id": "1", "result": false, "error": "Invalid API key"}'
-        )
-        mock_connect.return_value = mock_ws
+async def test_failed_handshake():
+    """Test handling of a failed handshake response."""
+    conn = TrueNASConnection("truenas.local", "fakeuser", "fakepassword")
 
-        with pytest.raises(AuthenticationError):
-            await truenas_conn.connect()
+    mock_ws = AsyncMock()
+    mock_ws.recv.return_value = json.dumps(
+        {"msg": "failed", "error": "Unsupported version"}
+    )
+
+    mock_connect = AsyncMock(return_value=mock_ws)
+
+    with patch("websockets.connect", mock_connect):
+        with pytest.raises(
+            ConnectionError, match="Server rejected connection handshake"
+        ):
+            await conn.connect()
 
 
-# For testing against real TrueNAS instance
+@pytest.mark.asyncio
+async def test_failed_authentication():
+    """Test handling of failed authentication."""
+    conn = TrueNASConnection("truenas.local", "fakeuser", "wrongpassword")
+
+    mock_ws = AsyncMock()
+    mock_ws.recv.side_effect = [
+        # First response - successful handshake
+        json.dumps({"msg": "connected", "session": "test-session"}),
+        # Second response - auth failure
+        json.dumps({"id": "1", "msg": "result", "result": False}),
+    ]
+
+    mock_connect = AsyncMock(return_value=mock_ws)
+
+    with patch("websockets.connect", mock_connect):
+        with pytest.raises(AuthenticationError, match="Server rejected authentication"):
+            await conn.connect()
+
+
 @pytest.mark.integration
 @pytest.mark.asyncio
 async def test_live_connection():
@@ -51,17 +101,19 @@ async def test_live_connection():
 
     Requires environment variables:
         TRUENAS_HOST: Hostname/IP of TrueNAS instance
-        TRUENAS_API_KEY: Valid API key
+        TRUENAS_USERNAME: API user username
+        TRUENAS_PASSWORD: API user password
     """
     import os
 
     host = os.getenv("TRUENAS_HOST")
-    api_key = os.getenv("TRUENAS_API_KEY")
+    username = os.getenv("TRUENAS_USERNAME")
+    password = os.getenv("TRUENAS_PASSWORD")
 
-    if not all([host, api_key]):
+    if not all([host, username, password]):
         pytest.skip("Missing required environment variables for live testing")
 
-    conn = TrueNASConnection(host, api_key)
+    conn = TrueNASConnection(host, username, password)
     await conn.connect()
     assert conn.websocket is not None
     await conn.disconnect()
