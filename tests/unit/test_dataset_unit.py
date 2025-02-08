@@ -1,8 +1,10 @@
 # test_dataset.py
-import pytest
 from unittest.mock import AsyncMock, patch
-from truenas_api.dataset import DatasetManager, DatasetError
+
+import pytest
+
 from truenas_api.connection import TrueNASResponse
+from truenas_api.dataset import DatasetError, DatasetManager
 
 
 @pytest.mark.asyncio
