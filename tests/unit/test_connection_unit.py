@@ -1,8 +1,11 @@
-import pytest
-import json
 import asyncio
+import json
+import uuid
 from unittest.mock import AsyncMock, patch
-from truenas_api.connection import TrueNASConnection, AuthenticationError
+
+import pytest
+
+from truenas_api.connection import AuthenticationError, TrueNASConnection
 
 
 @pytest.mark.asyncio
@@ -12,16 +15,16 @@ async def test_successful_connection_with_handshake():
 
     # Create our mock websocket
     mock_ws = AsyncMock()
-    session_id = "b4a4d164-6bc7-11e6-8a93-00e04d680384"
+    session_id = uuid.UUID("b4a4d164-6bc7-11e6-8a93-00e04d680384")
 
     # Set up the responses for the websocket
     mock_ws.recv.side_effect = [
         # First response - handshake
-        json.dumps({"msg": "connected", "session": session_id}),
+        json.dumps({"msg": "connected", "session": str(session_id)}),
         # Second response - authentication
         json.dumps(
             {
-                "id": session_id,
+                "id": str(uuid.uuid5(session_id, str(1))),
                 "msg": "result",
                 "result": True,
             }
@@ -49,7 +52,7 @@ async def test_successful_connection_with_handshake():
 
         # Check auth message
         auth_msg = json.loads(calls[1].args[0])
-        assert auth_msg["id"] == session_id
+        assert auth_msg["id"] == str(uuid.uuid5(session_id, str(1)))
         assert auth_msg["msg"] == "method"
         assert auth_msg["method"] == "auth.login"
         assert auth_msg["params"] == ["fakeuser", "fakepassword"]
@@ -79,12 +82,19 @@ async def test_failed_authentication():
     """Test handling of failed authentication."""
     conn = TrueNASConnection("truenas.local", "fakeuser", "wrongpassword")
 
+    test_session = uuid.uuid4()
     mock_ws = AsyncMock()
     mock_ws.recv.side_effect = [
         # First response - successful handshake
-        json.dumps({"msg": "connected", "session": "test-session"}),
+        json.dumps({"msg": "connected", "session": str(test_session)}),
         # Second response - auth failure
-        json.dumps({"id": "1", "msg": "result", "result": False}),
+        json.dumps(
+            {
+                "id": str(uuid.uuid5(test_session, str(1))),
+                "msg": "result",
+                "result": False,
+            }
+        ),
     ]
 
     mock_connect = AsyncMock(return_value=mock_ws)
@@ -92,4 +102,3 @@ async def test_failed_authentication():
     with patch("websockets.connect", mock_connect):
         with pytest.raises(AuthenticationError, match="Server rejected authentication"):
             await conn.connect()
-
