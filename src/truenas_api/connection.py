@@ -1,8 +1,10 @@
 import asyncio
-import websockets
 import json
-from typing import Optional, Dict, Any
+import uuid
 from dataclasses import dataclass
+from typing import Any, Dict, Optional
+
+import websockets
 
 
 @dataclass
@@ -23,10 +25,20 @@ class TrueNASConnection:
         """
         self.host = host
         self.username = uname
-        self.password = passwd
+        self._password = passwd
         self.websocket = None
         self.session_id = None
-        self._msg_id = 0  # For tracking API calls
+        self._msg_id_counter = 0  # For tracking API calls
+
+    def _generate_msg_id(self) -> str:
+        """Generate a unique msg id for this message.
+
+        Increments _msg_id_counter
+
+        Returns: UUID
+        """
+        self._msg_id_counter += 1
+        return str(uuid.uuid5(self.session_id, str(self._msg_id_counter)))
 
     async def connect(self) -> None:
         """Establish WebSocket connection to TrueNAS.
@@ -52,13 +64,13 @@ class TrueNASConnection:
             if res.get("msg") != "connected":
                 raise ConnectionError(f"Server rejected connection handshake: {res}")
 
-            self.session_id = res.get("session")
+            self.session_id = uuid.UUID(res.get("session"))
             # authenticate
             auth_msg = {
-                "id": self.session_id,
+                "id": self._generate_msg_id(),
                 "msg": "method",
                 "method": "auth.login",
-                "params": [self.username, self.password],
+                "params": [self.username, self._password],
             }
             await self.websocket.send(json.dumps(auth_msg))
             res_json = await self.websocket.recv()
@@ -89,9 +101,8 @@ class TrueNASConnection:
         if not self.websocket:
             raise ConnectionError("Not connected")
 
-        self._msg_id += 1
         message = {
-            "id": str(self._msg_id),
+            "id": self._generate_msg_id(),
             "msg": "method",
             "method": method,
             "params": params,
