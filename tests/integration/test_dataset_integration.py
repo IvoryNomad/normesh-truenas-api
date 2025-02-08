@@ -1,9 +1,12 @@
-import pytest
-import os
 import json
+import os
+
+import pytest
+from pytest_asyncio import fixture
+
 from truenas_api.connection import TrueNASConnection
 from truenas_api.dataset import DatasetManager
-from pytest_asyncio import fixture
+
 
 @fixture(scope="function")
 async def truenas_connection():

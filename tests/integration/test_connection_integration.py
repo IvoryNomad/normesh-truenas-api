@@ -1,8 +1,10 @@
-import pytest
-import json
 import asyncio
+import json
 from unittest.mock import AsyncMock, patch
-from truenas_api.connection import TrueNASConnection, AuthenticationError
+
+import pytest
+
+from truenas_api.connection import AuthenticationError, TrueNASConnection
 
 
 #@pytest.mark.integration
