@@ -37,6 +37,12 @@ class DatasetManager:
     pool.dataset.set_quota                              |     No      |         | No
     pool.dataset.unlock_services_restart_choices        |     No      |         | No
     pool.dataset.update                                 |     No      |         | No
+    pool.dataset.userprop.create                        |     No      |         | No
+    pool.dataset.userprop.delete                        |     No      |         | No
+    pool.dataset.userprop.get_instance                  |     No      |         | No
+    pool.dataset.userprop.query                         |     No      |         | No
+    pool.dataset.userprop.update                        |     No      |         | No
+
     """
 
     def __init__(self, connection: TrueNASConnection):
