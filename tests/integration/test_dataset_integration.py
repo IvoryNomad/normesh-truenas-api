@@ -4,6 +4,7 @@ import os
 import pytest
 from pytest_asyncio import fixture
 
+from truenas_api.auth import AuthConfig
 from truenas_api.connection import TrueNASConnection
 from truenas_api.dataset import DatasetManager
 
@@ -18,17 +19,22 @@ async def truenas_connection():
     if not all([host, username, password]):
         pytest.skip("Missing required environment variables for integration testing")
 
-    conn = TrueNASConnection(host, username, password)
+    my_auth_config = AuthConfig(
+        auth_type="passwd", username=username, password=password
+    )
+    conn = TrueNASConnection(host, my_auth_config)
     await conn.connect()
 
     yield conn
 
     await conn.disconnect()
 
+
 @fixture(scope="function")
 async def dataset_manager(truenas_connection):
     """Create a DatasetManager instance for testing."""
     return DatasetManager(truenas_connection)
+
 
 @pytest.mark.integration
 @pytest.mark.asyncio
@@ -61,8 +67,6 @@ async def test_dataset_query(dataset_manager):
     assert "name" in first_dataset
 
     # Try querying with a filter for a specific dataset
-    filtered = await dataset_manager.query(
-        filters=[["id", "=", first_dataset["id"]]]
-    )
+    filtered = await dataset_manager.query(filters=[["id", "=", first_dataset["id"]]])
     assert len(filtered) == 1
     assert filtered[0]["id"] == first_dataset["id"]

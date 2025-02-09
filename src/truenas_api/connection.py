@@ -7,6 +7,8 @@ from typing import Any, Dict, Optional
 
 import websockets
 
+from .auth import AuthConfig, create_auth_strategy
+
 # create logger for this module
 logger = logging.getLogger(__name__)
 
@@ -19,30 +21,25 @@ class TrueNASResponse:
 
 
 class TrueNASConnection:
-    def __init__(self, host: str, uname: str, passwd: str):
+    def __init__(self, host: str, auth_config: AuthConfig):
         """Initialize TrueNAS connection.
 
         Args:
             host: TrueNAS hostname/IP (e.g. 'truenas.local')
-            uname: WebSocket API username
-            passwd: WebSocket API password
+            auth_config: One of implemented strategies in AuthConfig
         """
         self.host = host
-        self.username = uname
-        self._password = passwd
+        self.auth_strategy = create_auth_strategy(auth_config)
         self.websocket = None
         self.session_id = None
         self._msg_id_counter = 0  # For tracking API calls
 
         # log intitalization, but mask API key and/or password
-        # since we're still working on the DDP websocket AP{I, ignore the
+        # since we're still working on the DDP websocket API, ignore the
         # API key case for now
-        masked_passwd = "***"
         logger.debug(
-            "Initiazing TrueNAS connection to %s, username %s, password %s",
+            "Initializing TrueNAS connection to %s",
             self.host,
-            self.username,
-            masked_passwd,
         )
 
     def _generate_msg_id(self) -> str:
@@ -75,80 +72,6 @@ class TrueNASConnection:
             else:
                 masked_params.append(param)
         return masked_params
-
-    async def connect(self) -> None:
-        """Establish WebSocket connection to TrueNAS.
-
-        The connection process happens in two steps:
-        1. Initial WebSocket connect with version handshake. Returns a session id.
-        2. Authentication using the provided id, plus a username and password.
-
-        Raises:
-            ConnectionError: If connection cannot be established
-            AuthenticationError: If auth creds are invalid
-        """
-        uri = f"ws://{self.host}/websocket"
-
-        logger.info("Attempting to connect to TrueNAS at %s", uri)
-        try:
-            # open the websocket
-            self.websocket = await websockets.connect(uri)
-            logger.debug("WebSocket connection opened")
-            # establish connection
-            conn_msg = {"msg": "connect", "version": "1", "support": ["1"]}
-            conn_msg_json = json.dumps(conn_msg)
-            logger.debug("Sending connection request: %s", conn_msg_json)
-            await self.websocket.send(conn_msg_json)
-            res_json = await self.websocket.recv()
-            res = json.loads(res_json)
-            logger.debug("Received connection response: %s", res_json)
-
-            if res.get("msg") != "connected":
-                raise ConnectionError(f"Server rejected connection handshake: {res}")
-
-            self.session_id = uuid.UUID(res.get("session"))
-            logger.debug("Established connection: session id %s", self.session_id)
-            # authenticate
-            auth_msg = {
-                "id": self._generate_msg_id(),
-                "msg": "method",
-                "method": "auth.login",
-                "params": [self.username, self._password],
-            }
-            auth_msg_json = json.dumps(auth_msg)
-            logger.debug("Sending authentication request: %s", auth_msg_json)
-            await self.websocket.send(auth_msg_json)
-            res_json = await self.websocket.recv()
-            res = json.loads(res_json)
-            logger.debug("Received authentication response: %s", res_json)
-
-            if not res.get("result"):
-                logger.error("Authentication failed: %s", res)
-                raise AuthenticationError(f"Server rejected authentication")
-
-            logger.info(
-                "Successfully connected and authenticated to TrueNAS %s", self.host
-            )
-
-        except websockets.exceptions.WebSocketException as e:
-            logger.error("Failed to connect to TrueNAS: %s", str(e))
-            raise ConnectionError(f"Failed to connect to TrueNAS: {e}")
-
-    async def disconnect(self) -> None:
-        """Close WebSocket connection."""
-        if self.websocket:
-            logger.info("Disconnecting from TrueNAS")
-            logger.debug(
-                "Session ID %s, processed %s messages",
-                self.session_id,
-                self._msg_id_counter,
-            )
-            await self.websocket.close()
-            self.websocket = None
-            self.session_id = None
-            logger.debug("WebSocket connection closed")
-        else:
-            logger.debug("Disconnect method called but no active connection exists")
 
     async def _call(self, method: str, params: list) -> TrueNASResponse:
         """Make raw WebSocket API call.
@@ -186,6 +109,71 @@ class TrueNASConnection:
         return TrueNASResponse(
             id=parsed.get("id"), result=parsed.get("result"), error=parsed.get("error")
         )
+
+    async def connect(self) -> None:
+        """Establish WebSocket connection to TrueNAS.
+
+        The connection process happens in two steps:
+        1. Initial WebSocket connect with version handshake. Returns a session id.
+        2. Authentication using the provided id, plus a username and password.
+
+        Raises:
+            ConnectionError: If connection cannot be established
+            AuthenticationError: If auth creds are invalid
+        """
+        uri = f"ws://{self.host}/websocket"
+
+        logger.info("Attempting to connect to TrueNAS at %s", uri)
+        try:
+            # open the websocket
+            self.websocket = await websockets.connect(uri)
+            logger.debug("WebSocket connection opened")
+            # establish connection
+            conn_msg = {"msg": "connect", "version": "1", "support": ["1"]}
+            conn_msg_json = json.dumps(conn_msg)
+            logger.debug("Sending connection request: %s", conn_msg_json)
+            await self.websocket.send(conn_msg_json)
+            res_json = await self.websocket.recv()
+            res = json.loads(res_json)
+            logger.debug("Received connection response: %s", res_json)
+
+            if res.get("msg") != "connected":
+                raise ConnectionError(f"Server rejected connection handshake: {res}")
+
+            self.session_id = uuid.UUID(res.get("session"))
+            logger.debug("Established connection: session id %s", self.session_id)
+
+            # use auth strategy for authentication
+            logger.debug("Sending authentication request")
+            success = await self.auth_strategy.authenticate(self._call)
+
+            if not success:
+                logger.error("Authentication failed")
+                raise AuthenticationError(f"Server rejected authentication")
+
+            logger.info(
+                "Successfully connected and authenticated to TrueNAS %s", self.host
+            )
+
+        except websockets.exceptions.WebSocketException as e:
+            logger.error("Failed to connect to TrueNAS: %s", str(e))
+            raise ConnectionError(f"Failed to connect to TrueNAS: {e}")
+
+    async def disconnect(self) -> None:
+        """Close WebSocket connection."""
+        if self.websocket:
+            logger.info("Disconnecting from TrueNAS")
+            logger.debug(
+                "Session ID %s, processed %s messages",
+                self.session_id,
+                self._msg_id_counter,
+            )
+            await self.websocket.close()
+            self.websocket = None
+            self.session_id = None
+            logger.debug("WebSocket connection closed")
+        else:
+            logger.debug("Disconnect method called but no active connection exists")
 
 
 class AuthenticationError(Exception):

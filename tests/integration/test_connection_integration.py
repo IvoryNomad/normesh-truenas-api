@@ -4,12 +4,13 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from truenas_api.auth import AuthConfig
 from truenas_api.connection import AuthenticationError, TrueNASConnection
 
 
-#@pytest.mark.integration
+@pytest.mark.integration
 @pytest.mark.asyncio
-async def test_live_connection():
+async def test_live_connection_with_passwd():
     """Test connection to actual TrueNAS instance.
 
     Requires environment variables:
@@ -26,7 +27,10 @@ async def test_live_connection():
     if not all([host, username, password]):
         pytest.skip("Missing required environment variables for live testing")
 
-    conn = TrueNASConnection(host, username, password)
+    my_auth_config = AuthConfig(
+        auth_type="passwd", username=username, password=password
+    )
+    conn = TrueNASConnection(host, my_auth_config)
     await conn.connect()
     assert conn.websocket is not None
     await conn.disconnect()
