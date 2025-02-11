@@ -25,8 +25,8 @@ class DatasetManager:
     pool.dataset.export_key                             |     No      |         | Yes
     pool.dataset.export_keys                            |     No      |         | Yes
     pool.dataset.export_keys_for_replication            |     No      |         | Yes
-    pool.dataset.get_instance                           |     No      |  0.1.0  | No
-    pool.dataset.get_quota                              |     No      |  0.1.0  | No
+    pool.dataset.get_instance                           |     Yes     |  0.1.0  | No
+    pool.dataset.get_quota                              |     Yes     |  0.1.0  | No
     pool.dataset.inherit_parent_encryption_properties   |     No      |         | No
     pool.dataset.lock                                   |     No      |         | Yes
     pool.dataset.mountpoint                             |     No      |         | No
@@ -35,12 +35,11 @@ class DatasetManager:
     pool.dataset.query                                  |     Yes     |  0.1.0  | No
     pool.dataset.recommended_zvol_blocksize             |     No      |         | No
     pool.dataset.recordsize_choices                     |     No      |         | No
-    pool.dataset.set_quota                              |     No      |         | No
+    pool.dataset.set_quota                              |     No      |  0.1.0  | No
     pool.dataset.snapshot_count                         |     No      |         | No
     pool.dataset.unlock                                 |     No      |         | Yes
-    pool.dataset.set_quota                              |     No      |         | No
     pool.dataset.unlock_services_restart_choices        |     No      |         | No
-    pool.dataset.update                                 |     No      |         | No
+    pool.dataset.update                                 |     No      |  0.1.0  | No
     pool.dataset.userprop.create                        |     No      |         | No
     pool.dataset.userprop.delete                        |     No      |         | No
     pool.dataset.userprop.get_instance                  |     No      |         | No
