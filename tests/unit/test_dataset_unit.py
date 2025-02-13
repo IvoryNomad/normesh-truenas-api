@@ -15,7 +15,7 @@ async def test_create_basic_filesystem():
     )
 
     manager = DatasetManager(conn)
-    result = await manager.create("tank/testfs")
+    result = await manager.create({"name": "tank/testfs", "type": "FILESYSTEM"})
 
     # Verify minimal params for filesystem
     conn._call.assert_called_once_with(
@@ -24,10 +24,11 @@ async def test_create_basic_filesystem():
             {
                 "name": "tank/testfs",
                 "type": "FILESYSTEM",
-                "create_ancestors": False,
+                "share_type": "GENERIC",
                 "encryption": False,
                 "inherit_encryption": True,
-                "share_type": "GENERIC",
+                "user_properties": [],
+                "create_ancestors": False,
             }
         ],
     )
@@ -43,24 +44,71 @@ async def test_create_volume_minimal():
 
     manager = DatasetManager(conn)
     result = await manager.create(
-        "tank/testvol", type="VOLUME", properties={"volsize": 1024 * 1024 * 1024}  # 1GB
+        {"name": "tank/testvol", "type": "VOLUME", "volsize": 1024 * 1024 * 1024}  # 1GB
     )
 
-    # Verify required volume params
     conn._call.assert_called_once_with(
         "pool.dataset.create",
         [
             {
                 "name": "tank/testvol",
                 "type": "VOLUME",
-                "create_ancestors": False,
+                "volsize": 1024 * 1024 * 1024,
+                "share_type": "GENERIC",
                 "encryption": False,
                 "inherit_encryption": True,
-                "share_type": "GENERIC",
-                "volsize": 1024 * 1024 * 1024,
+                "user_properties": [],
+                "create_ancestors": False,
             }
         ],
     )
+
+
+# @pytest.mark.asyncio
+# async def test_create_with_invalid_property():
+#     """Test that invalid properties raise validation errors."""
+#     conn = AsyncMock()
+#     manager = DatasetManager(conn)
+#
+#     # Test invalid compression type
+#     with pytest.raises(ValueError, match="Invalid compression type"):
+#         await manager.create(
+#             {
+#                 "name": "tank/test",
+#                 "compression": "INVALID",  # Type checker should catch this!
+#             }
+#         )
+#
+#     # Test invalid acltype for VOLUME
+#     with pytest.raises(ValueError, match="acltype cannot be set on VOLUME"):
+#         await manager.create(
+#             {
+#                 "name": "tank/test",
+#                 "type": "VOLUME",
+#                 "volsize": 1024 * 1024 * 1024,
+#                 "acltype": "NFSV4",
+#             }
+#         )
+#
+#     # Test volume without size
+#     with pytest.raises(ValueError, match="volsize required for VOLUME type"):
+#         await manager.create({"name": "tank/test", "type": "VOLUME"})
+#
+#     # Test invalid encryption options
+#     with pytest.raises(ValueError, match="passphrase or key required"):
+#         await manager.create(
+#             {
+#                 "name": "tank/test",
+#                 "encryption": True,
+#                 "encryption_options": {
+#                     "algorithm": "AES-256-GCM",
+#                     "generate_key": False,
+#                 },
+#             }
+#         )
+#
+#     # Verify no API calls were made
+#     conn._call.assert_not_called()
 
 
 @pytest.mark.asyncio
@@ -73,9 +121,9 @@ async def test_create_volume_with_blocksize():
 
     manager = DatasetManager(conn)
     result = await manager.create(
-        "tank/testvol",
-        type="VOLUME",
         properties={
+            "name": "tank/testvol",
+            "type": "VOLUME",
             "volsize": 1024 * 1024 * 1024,
             "volblocksize": "4K",
             "sparse": True,
@@ -89,13 +137,14 @@ async def test_create_volume_with_blocksize():
             {
                 "name": "tank/testvol",
                 "type": "VOLUME",
-                "create_ancestors": False,
-                "encryption": False,
-                "inherit_encryption": True,
-                "share_type": "GENERIC",
                 "volsize": 1024 * 1024 * 1024,
                 "volblocksize": "4K",
                 "sparse": True,
+                "share_type": "GENERIC",
+                "encryption": False,
+                "inherit_encryption": True,
+                "user_properties": [],
+                "create_ancestors": False,
             }
         ],
     )
@@ -111,9 +160,11 @@ async def test_create_encrypted_dataset():
 
     manager = DatasetManager(conn)
     result = await manager.create(
-        "tank/secure",
-        encryption=True,
-        encryption_options={"generate_key": True, "algorithm": "AES-256-GCM"},
+        {
+            "name": "tank/secure",
+            "encryption": True,
+            "encryption_options": {"generate_key": True, "algorithm": "AES-256-GCM"},
+        }
     )
 
     # Verify encryption params
@@ -123,14 +174,19 @@ async def test_create_encrypted_dataset():
             {
                 "name": "tank/secure",
                 "type": "FILESYSTEM",
-                "create_ancestors": False,
                 "encryption": True,
-                "inherit_encryption": True,
-                "share_type": "GENERIC",
+                #               "inherit_encryption": True,
                 "encryption_options": {
                     "generate_key": True,
                     "algorithm": "AES-256-GCM",
+                    "pbkdf2iters": 350000,
+                    "passphrase": None,
+                    "key": None,
                 },
+                "share_type": "GENERIC",
+                "inherit_encryption": True,
+                "user_properties": [],
+                "create_ancestors": False,
             }
         ],
     )
@@ -146,8 +202,8 @@ async def test_create_with_properties():
 
     manager = DatasetManager(conn)
     result = await manager.create(
-        "tank/data",
         properties={
+            "name": "tank/data",
             "compression": "LZ4",
             "atime": "OFF",
             "sync": "DISABLED",
@@ -164,16 +220,17 @@ async def test_create_with_properties():
             {
                 "name": "tank/data",
                 "type": "FILESYSTEM",
-                "create_ancestors": False,
-                "encryption": False,
-                "inherit_encryption": True,
-                "share_type": "GENERIC",
                 "compression": "LZ4",
                 "atime": "OFF",
                 "sync": "DISABLED",
                 "quota": 5 * 1024 * 1024 * 1024,
                 "recordsize": "128K",
                 "acltype": "NFSV4",
+                "share_type": "GENERIC",
+                "encryption": False,
+                "inherit_encryption": True,
+                "user_properties": [],
+                "create_ancestors": False,
             }
         ],
     )
@@ -188,7 +245,9 @@ async def test_create_with_ancestors():
     )
 
     manager = DatasetManager(conn)
-    result = await manager.create("tank/parent/child", create_ancestors=True)
+    result = await manager.create(
+        {"name": "tank/parent/child", "create_ancestors": True}
+    )
 
     # Verify ancestor creation flag
     conn._call.assert_called_once_with(
@@ -198,9 +257,10 @@ async def test_create_with_ancestors():
                 "name": "tank/parent/child",
                 "type": "FILESYSTEM",
                 "create_ancestors": True,
+                "share_type": "GENERIC",
                 "encryption": False,
                 "inherit_encryption": True,
-                "share_type": "GENERIC",
+                "user_properties": [],
             }
         ],
     )
@@ -216,9 +276,9 @@ async def test_create_smb_share():
 
     manager = DatasetManager(conn)
     result = await manager.create(
-        "tank/share",
-        share_type="SMB",
-        properties={
+        {
+            "name": "tank/share",
+            "share_type": "SMB",
             "aclmode": "RESTRICTED",
             "acltype": "NFSV4",
         },
@@ -231,12 +291,13 @@ async def test_create_smb_share():
             {
                 "name": "tank/share",
                 "type": "FILESYSTEM",
-                "create_ancestors": False,
-                "encryption": False,
-                "inherit_encryption": True,
                 "share_type": "SMB",
                 "aclmode": "RESTRICTED",
                 "acltype": "NFSV4",
+                "encryption": False,
+                "inherit_encryption": True,
+                "user_properties": [],
+                "create_ancestors": False,
             }
         ],
     )
@@ -250,7 +311,7 @@ async def test_create_volume_missing_size():
     manager = DatasetManager(conn)
 
     with pytest.raises(DatasetError, match="volsize required for VOLUME type"):
-        await manager.create("tank/testvol", type="VOLUME")
+        await manager.create({"name": "tank/testvol", "type": "VOLUME"})
 
     # Verify no API call was made
     conn._call.assert_not_called()
@@ -264,9 +325,9 @@ async def test_create_volume_invalid_blocksize():
 
     with pytest.raises(DatasetError, match="Invalid volblocksize"):
         await manager.create(
-            "tank/testvol",
-            type="VOLUME",
-            properties={
+            {
+                "name": "tank/testvol",
+                "type": "VOLUME",
                 "volsize": 1024 * 1024 * 1024,
                 "volblocksize": "3K",  # Invalid size
             },
@@ -289,7 +350,7 @@ async def test_create_api_error():
     with pytest.raises(
         DatasetError, match="Failed to create dataset: Dataset already exists"
     ):
-        await manager.create("tank/exists")
+        await manager.create({"name": "tank/exists"})
 
 
 @pytest.mark.asyncio
@@ -547,3 +608,194 @@ async def test_dataset_query():
 
     # Verify correct API call
     conn._call.assert_called_once_with("pool.dataset.query", [])
+
+
+@pytest.mark.asyncio
+async def test_set_quota():
+    """Test setting dataset quotas."""
+    conn = AsyncMock()
+    conn._call.return_value = TrueNASResponse(id="1", result=None, error=None)
+
+    manager = DatasetManager(conn)
+
+    # Test setting a dataset quota
+    await manager.set_quota(
+        "tank/testds",
+        [
+            {
+                "quota_type": "DATASET",
+                "id": "0",
+                "quota_value": 10 * 1024 * 1024 * 1024,  # 10GB
+            }
+        ],
+    )
+
+    # Verify API call
+    conn._call.assert_called_once_with(
+        "pool.dataset.set_quota",
+        [
+            "tank/testds",
+            [{"quota_type": "DATASET", "id": "0", "quota_value": 10737418240}],
+        ],
+    )
+
+    # Reset mock for next test
+    conn._call.reset_mock()
+
+    # Test setting multiple quotas
+    await manager.set_quota(
+        "tank/testds",
+        [
+            {
+                "quota_type": "USER",
+                "id": "1000",
+                "quota_value": 5 * 1024 * 1024 * 1024,  # 5GB
+            },
+            {"quota_type": "GROUP", "id": "100", "quota_value": None},  # Remove quota
+        ],
+    )
+
+    # Verify API call
+    conn._call.assert_called_once_with(
+        "pool.dataset.set_quota",
+        [
+            "tank/testds",
+            [
+                {"quota_type": "USER", "id": "1000", "quota_value": 5368709120},
+                {"quota_type": "GROUP", "id": "100", "quota_value": None},
+            ],
+        ],
+    )
+
+
+@pytest.mark.asyncio
+async def test_set_quota_error():
+    """Test error handling when setting quotas."""
+    conn = AsyncMock()
+    conn._call.return_value = TrueNASResponse(
+        id="1", result=None, error="Dataset not found"
+    )
+
+    manager = DatasetManager(conn)
+
+    with pytest.raises(DatasetError, match="Failed to set quotas: Dataset not found"):
+        await manager.set_quota(
+            "tank/nonexistent",
+            [{"quota_type": "DATASET", "id": "0", "quota_value": 1024 * 1024 * 1024}],
+        )
+
+
+@pytest.mark.asyncio
+async def test_set_quota_none():
+    """Test setting quotas with None argument."""
+    conn = AsyncMock()
+    conn._call.return_value = TrueNASResponse(id="1", result=None, error=None)
+
+    manager = DatasetManager(conn)
+
+    # Verify that None is converted to empty list
+    await manager.set_quota("tank/testds", None)
+
+    conn._call.assert_called_once_with(
+        "pool.dataset.set_quota", ["tank/testds", []]  # Should pass empty list
+    )
+
+
+@pytest.mark.asyncio
+async def test_update_basic_properties():
+    """Test updating basic dataset properties."""
+    conn = AsyncMock()
+    conn._call.return_value = TrueNASResponse(
+        id="1", result={"id": "tank/testds", "type": "FILESYSTEM"}, error=None
+    )
+
+    manager = DatasetManager(conn)
+
+    # Test updating multiple properties
+    await manager.update(
+        "tank/testds",
+        {"compression": "LZ4", "atime": "OFF", "quota": 5 * 1024 * 1024 * 1024},  # 5GB
+    )
+
+    # Verify API call
+    conn._call.assert_called_once_with(
+        "pool.dataset.update",
+        ["tank/testds", {"compression": "LZ4", "atime": "OFF", "quota": 5368709120}],
+    )
+
+
+@pytest.mark.asyncio
+async def test_update_with_inheritance():
+    """Test setting properties to inherit from parent."""
+    conn = AsyncMock()
+    conn._call.return_value = TrueNASResponse(
+        id="1", result={"id": "tank/testds", "type": "FILESYSTEM"}, error=None
+    )
+
+    manager = DatasetManager(conn)
+
+    await manager.update(
+        "tank/testds",
+        {"compression": "INHERIT", "atime": "INHERIT", "recordsize": "INHERIT"},
+    )
+
+    # Verify API call
+    conn._call.assert_called_once_with(
+        "pool.dataset.update",
+        [
+            "tank/testds",
+            {"compression": "INHERIT", "atime": "INHERIT", "recordsize": "INHERIT"},
+        ],
+    )
+
+
+@pytest.mark.asyncio
+async def test_update_user_properties():
+    """Test updating user properties."""
+    conn = AsyncMock()
+    conn._call.return_value = TrueNASResponse(
+        id="1", result={"id": "tank/testds", "type": "FILESYSTEM"}, error=None
+    )
+
+    manager = DatasetManager(conn)
+
+    # Test adding and removing user properties
+    await manager.update(
+        "tank/testds",
+        {
+            "user_properties_update": [
+                {"key": "custom:owner", "value": "department1"},
+                {"key": "custom:temporary", "remove": True},
+            ]
+        },
+    )
+
+    # Verify API call
+    conn._call.assert_called_once_with(
+        "pool.dataset.update",
+        [
+            "tank/testds",
+            {
+                "user_properties_update": [
+                    {"key": "custom:owner", "value": "department1"},
+                    {"key": "custom:temporary", "remove": True},
+                ]
+            },
+        ],
+    )
+
+
+@pytest.mark.asyncio
+async def test_update_error():
+    """Test error handling during update."""
+    conn = AsyncMock()
+    conn._call.return_value = TrueNASResponse(
+        id="1", result=None, error="Dataset not found"
+    )
+
+    manager = DatasetManager(conn)
+
+    with pytest.raises(
+        DatasetError, match="Failed to update dataset: Dataset not found"
+    ):
+        await manager.update("tank/nonexistent", {"compression": "LZ4"})
