@@ -3,6 +3,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import Any, Awaitable, Callable, Literal, Optional
 
+from .connection import TrueNASConnection, TrueNASResponse
+
 logger = logging.getLogger(__name__)
 
 
@@ -74,3 +76,128 @@ def create_auth_strategy(config: AuthConfig) -> AuthStrategy:
         return TokenAuth(config.token)
     else:
         raise ValueError(f"Unsupported auth type: {config.auth_type}")
+
+
+class AcmeDNSAuthManager:
+    """Manages ACME DNS authentication operations via TrueNAS WebSocket API
+
+    Available methods                                   | implemented | planned | Job?
+    ----------------------------------------------------+-------------+---------+------
+    acme.dns.authenticator.authenticator_schemas        |     No      |         | No
+    acme.dns.authenticator.create                       |     No      |         | No
+    acme.dns.authenticator.delete                       |     No      |         | No
+    acme.dns.authenticator.get_instance                 |     No      |         | No
+    acme.dns.authenticator.query                        |     No      |         | No
+    acme.dns.authenticator.update                       |     No      |         | No
+
+    """
+
+    def __init__(self, connection: TrueNASConnection):
+        """Initialize acme-dns authenticator manager.
+
+        Args:
+            connection: Authenticated TrueNAS connection
+        """
+        self.conn = connection
+        ...
+
+
+class ActiveDirectoryManager:
+    """Manages ActiveDirectory authentication operations via TrueNAS WebSocket API
+
+    Available methods                                   | implemented | planned | Job?
+    ----------------------------------------------------+-------------+---------+------
+    activedirectory.config                              |     No      |         | No
+    activedirectory.domain_info                         |     No      |         | No
+    activedirectory.leave                               |     No      |         | Yes
+    activedirectory.nss_info_choices                    |     No      |         | No
+    activedirectory.update                              |     No      |         | Yes
+
+    """
+
+    def __init__(self, connection: TrueNASConnection):
+        """Initialize ActiveDirectory manager.
+
+        Args:
+            connection: Authenticated TrueNAS connection
+        """
+        self.conn = connection
+        ...
+
+
+class APIKeyManager:
+    """Manages API Key operations via TrueNAS WebSocket API
+
+    Available methods                                   | implemented | planned | Job?
+    ----------------------------------------------------+-------------+---------+------
+    api_key.create                                      |     No      |         | No
+    api_key.delete                                      |     No      |         | No
+    api_key.get_instance                                |     No      |         | No
+    api_key.query                                       |     No      |         | No
+    api_key.update                                      |     No      |         | No
+
+    """
+
+    def __init__(self, connection: TrueNASConnection):
+        """Initialize API Key manager.
+
+        Args:
+            connection: Authenticated TrueNAS connection
+        """
+        self.conn = connection
+        ...
+
+
+class AuthManager:
+    """Manages authentication operations via TrueNAS WebSocket API
+
+    Available methods                                   | implemented | planned | Job?
+    ----------------------------------------------------+-------------+---------+------
+    auth.check_password                                 |     No      |         | No
+    auth.check_user                                     |     No      |         | No
+    auth.generate_token                                 |     No      |         | No
+    auth.login                                          |     Yes*    |  0.1.0  | No
+    auth.login_with_api_key                             |     Yes*    |  0.1.0  | No
+    auth.login_with_token                               |     Yes*    |  0.1.0  | No
+    auth.logout                                         |     No      |         | No
+    auth.me                                             |     No      |         | No
+    auth.sessions                                       |     No      |         | No
+    auth.set_attributes                                 |     No      |         | No
+    auth.terminate_other_sessions                       |     No      |         | No
+    auth.two_factor_auth                                |     No      |         | No
+    auth.twofactor.config                               |     No      |         | No
+    auth.twofactor.update                               |     No      |         | No
+
+    * Note: auth.login methods implemented in AuthStrategy and called in
+            TrueNASConnection.connect
+
+    """
+
+    def __init__(self, connection: TrueNASConnection):
+        """Initialize authentication manager.
+
+        Args:
+            connection: Authenticated TrueNAS connection
+        """
+        self.conn = connection
+        ...
+
+
+class DirectorySvcManager:
+    """Manages directory services operations via TrueNAS WebSocket API
+
+     Available methods                                   | implemented | planned | Job?
+     ----------------------------------------------------+-------------+---------+------
+    directoryservices.get_state                          |     No      |         | No
+    directoryservices.status                             |     No      |         | No
+
+    """
+
+    def __init__(self, connection: TrueNASConnection):
+        """Initialize directory services manager.
+
+        Args:
+            connection: Authenticated TrueNAS connection
+        """
+        self.conn = connection
+        ...
