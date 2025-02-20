@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class JobManager:
-    """Manages TrueNAS job operations.
+    """Manages TrueNAS job operations via TrueNAS WebSocket API.
 
     Available methods                                   | implemented | planned | Job?
     ----------------------------------------------------+-------------+---------+------
