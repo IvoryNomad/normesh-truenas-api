@@ -1,6 +1,11 @@
+import logging
 from typing import Dict, List, Optional, Union
 
 from .connection import TrueNASConnection, TrueNASResponse
+from .job import JobManager
+
+# Create module logger
+logger = logging.getLogger(__name__)
 
 
 class PoolManager:
@@ -49,3 +54,6 @@ class PoolManager:
             connection: Authenticated TrueNAS connection
         """
         self.conn = connection
+        self.job_mgr = JobManager(connection)
+
+    async def create(): ...
