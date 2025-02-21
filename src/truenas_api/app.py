@@ -99,3 +99,27 @@ class AppCatalogManager:
         """
         self.conn = connection
         ...
+
+
+class DockerManager:
+    """Manages authentication operations via TrueNAS WebSocket API
+
+    Available methods                                   | implemented | planned | Job?
+    ----------------------------------------------------+-------------+---------+------
+    docker.config                                       |     No      |         | No
+    docker.nvidia_present                               |     No      |         | No
+    docker.status                                       |     No      |         | No
+    docker.update                                       |     No      |         | Yes
+    docker.network.get_instance                         |     No      |         | No
+    docker.network.query                                |     No      |         | No
+
+    """
+
+    def __init__(self, connection: TrueNASConnection):
+        """Initialize docker manager.
+
+        Args:
+            connection: Authenticated TrueNAS connection
+        """
+        self.conn = connection
+        ...

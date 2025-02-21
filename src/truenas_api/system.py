@@ -102,3 +102,98 @@ class DeviceManager:
         """
         self.conn = connection
         ...
+
+
+class DiskManager:
+    """Manages disk operations via TrueNAS WebSocket API
+
+    Available methods                                   | implemented | planned | Job?
+    ----------------------------------------------------+-------------+---------+------
+    disk.details                                        |     No      |         | No
+    disk.get_instance                                   |     No      |         | No
+    disk.get_unused                                     |     No      |         | No
+    disk.get_used                                       |     No      |         | No
+    disk.query                                          |     No      |         | No
+    disk.resize                                         |     No      |         | Yes
+    disk.retaste                                        |     No      |         | Yes
+    disk.smart_attributes                               |     No      |         | No
+    disk.temperature                                    |     No      |         | No
+    disk.temperature_agg                                |     No      |         | No
+    disk.temperature_alerts                             |     No      |         | No
+    disk.temperatures                                   |     No      |         | No
+    disk.update                                         |     No      |         | No
+    disk.wipe                                           |     No      |         | Yes
+    disk.                                               |     No      |         | No
+    disk.                                               |     No      |         | No
+
+    """
+
+    def __init__(self, connection: TrueNASConnection):
+        """Initialize system disk manager.
+
+        Args:
+            connection: Authenticated TrueNAS connection
+        """
+        self.conn = connection
+        ...
+
+
+class EnclosureManager:
+    """Manages system enclosure operations via TrueNAS WebSocket API
+
+    Available methods                                   | implemented | planned | Job?
+    ----------------------------------------------------+-------------+---------+------
+    enclosure.get_instance                              |     No      |         | No
+    enclosure.query                                     |     No      |         | No
+    enclosure.set_slot_status                           |     No      |         | No
+
+    """
+
+    def __init__(self, connection: TrueNASConnection):
+        """Initialize system enclosure manager.
+
+        Args:
+            connection: Authenticated TrueNAS connection
+        """
+        self.conn = connection
+        ...
+
+
+class FailoverManager:
+    """Manages system failover operations via TrueNAS WebSocket API
+
+    Available methods                                   | implemented | planned | Job?
+    ----------------------------------------------------+-------------+---------+------
+    failover.become_passive                             |     No      |         | No
+    failover.call_remote                                |     No      |         | No
+    failover.config                                     |     No      |         | No
+    failover.control                                    |     No      |         | No
+    failover.force_master                               |     No      |         | No
+    failover.get_ips                                    |     No      |         | No
+    failover.hardware                                   |     No      |         | No
+    failover.in_progress                                |     No      |         | No
+    failover.licensed                                   |     No      |         | No
+    failover.node                                       |     No      |         | No
+    failover.status                                     |     No      |         | No
+    failover.sync_from_peer                             |     No      |         | No
+    failover.sync_to_peer                               |     No      |         | No
+    failover.unlock                                     |     No      |         | No
+    failover.update                                     |     No      |         | No
+    failover.upgrade                                    |     No      |         | Yes
+    failover.upgrade_finish                             |     No      |         | Yes
+    failover.upgrade_pending                            |     No      |         | No
+    failover.disabled.reasons                           |     No      |         | No
+    failover.reboot.info                                |     No      |         | No
+    failover.reboot.reboot_other_node                   |     No      |         | Yes
+    failover.reboot.reboot_required                     |     No      |         | No
+
+    """
+
+    def __init__(self, connection: TrueNASConnection):
+        """Initialize system failover manager.
+
+        Args:
+            connection: Authenticated TrueNAS connection
+        """
+        self.conn = connection
+        ...
