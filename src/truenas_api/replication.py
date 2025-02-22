@@ -1,5 +1,4 @@
 import logging
-from typing import Any, Dict, Optional
 
 from .connection import TrueNASConnection, TrueNASResponse
 
@@ -77,3 +76,26 @@ class ReplicationManager:
     replication.config.update                           |     No      |         | No
 
     """
+
+
+class RsyncTaskManager:
+    """Manages TrueNAS rsync task operations via TrueNAS WebSocket API.
+
+    Available methods                                   | implemented | planned | Job?
+    ----------------------------------------------------+-------------+---------+------
+    rsynctask.create                                    |     No      |         | No
+    rsynctask.delete                                    |     No      |         | No
+    rsynctask.get_instance                              |     No      |         | No
+    rsynctask.query                                     |     No      |         | No
+    rsynctask.run                                       |     No      |         | Yes
+    rsynctask.update                                    |     No      |         | No
+
+    """
+
+    def __init__(self, connection: TrueNASConnection):
+        """Initialize rsync task manager.
+
+        Args:
+            connection: Authenticated TrueNAS connection
+        """
+        self.conn = connection

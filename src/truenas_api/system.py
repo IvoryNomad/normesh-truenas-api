@@ -197,3 +197,351 @@ class FailoverManager:
         """
         self.conn = connection
         ...
+
+
+class HWManager:
+    """Manages TrueNAS hardware operations via TrueNAS WebSocket API.
+
+    Available methods                                   | implemented | planned | Job?
+    ----------------------------------------------------+-------------+---------+------
+    hardware.cpu.available_governors                    |     No      |         | No
+    hardware.cpu.current_governor                       |     No      |         | No
+    hardware.cpu.set_governor                           |     No      |         | No
+    hardware.memory.error_info                          |     No      |         | No
+
+    """
+
+    def __init__(self, connection: TrueNASConnection):
+        """Initialize hardware manager.
+
+        Args:
+            connection: Authenticated TrueNAS connection
+        """
+        self.conn = connection
+
+
+class InitShutdownScriptManager:
+    """Manages TrueNAS initshutdownscript operations via TrueNAS WebSocket API.
+
+    Available methods                                   | implemented | planned | Job?
+    ----------------------------------------------------+-------------+---------+------
+    initshutdownscript.create                           |     No      |         | No
+    initshutdownscript.delete                           |     No      |         | No
+    initshutdownscript.get_instance                     |     No      |         | No
+    initshutdownscript.query                            |     No      |         | No
+    initshutdownscript.update                           |     No      |         | No
+    initshutdownscript.                                 |     No      |         | No
+
+    """
+
+    def __init__(self, connection: TrueNASConnection):
+        """Initialize initshutdownscript manager.
+
+        Args:
+            connection: Authenticated TrueNAS connection
+        """
+        self.conn = connection
+
+
+class InterfaceManager:
+    """Manages TrueNAS interface operations via TrueNAS WebSocket API.
+
+    Available methods                                   | implemented | planned | Job?
+    ----------------------------------------------------+-------------+---------+------
+    interface.bridge_member_choices                     |     No      |         | No
+    interface.cancel_rollback                           |     No      |         | No
+    interface.checkin                                   |     No      |         | No
+    interface.checkin_waiting                           |     No      |         | No
+    interface.choices                                   |     No      |         | No
+    interface.commit                                    |     No      |         | No
+    interface.create                                    |     No      |         | No
+    interface.default_route_will_be_removed             |     No      |         | No
+    interface.delete                                    |     No      |         | No
+    interface.get_instance                              |     No      |         | No
+    interface.has_pending_changes                       |     No      |         | No
+    interface.ip_in_use                                 |     No      |         | No
+    interface.lacpdu_rate_choices                       |     No      |         | No
+    interface.lag_port_choices                          |     No      |         | No
+    interface.query                                     |     No      |         | No
+    interface.rollback                                  |     No      |         | No
+    interface.save_default_route                        |     No      |         | No
+    interface.services_restarted_on_sync                |     No      |         | No
+    interface.update                                    |     No      |         | No
+    interface.vlan_parent_interface_choices             |     No      |         | No
+    interface.websocket_interface                       |     No      |         | No
+    interface.websocket_local_ip                        |     No      |         | No
+    interface.xmit_has_policy_choices                   |     No      |         | No
+    interface.capabilities.get                          |     No      |         | No
+    interface.capabilities.set                          |     No      |         | No
+
+    """
+
+    def __init__(self, connection: TrueNASConnection):
+        """Initialize interface manager.
+
+        Args:
+            connection: Authenticated TrueNAS connection
+        """
+        self.conn = connection
+
+
+class IPMIManager:
+    """Manages TrueNAS IPMI operations via TrueNAS WebSocket API.
+
+    Available methods                                   | implemented | planned | Job?
+    ----------------------------------------------------+-------------+---------+------
+    ipmi.is_loaded                                      |     No      |         | No
+    ipmi.chassis.identify                               |     No      |         | No
+    ipmi.chassis.info                                   |     No      |         | No
+    ipmi.lan.channels                                   |     No      |         | No
+    ipmi.lan.get_instance                               |     No      |         | No
+    ipmi.lan.query                                      |     No      |         | No
+    ipmi.lan.update                                     |     No      |         | No
+    ipmi.mc.info                                        |     No      |         | No
+    ipmi.sel.clear                                      |     No      |         | Yes
+    ipmi.sel.elist                                      |     No      |         | Yes
+    ipmi.sel.info                                       |     No      |         | Yes
+    ipmi.sensors.query                                  |     No      |         | No
+
+    """
+
+    def __init__(self, connection: TrueNASConnection):
+        """Initialize IPMI manager.
+
+        Args:
+            connection: Authenticated TrueNAS connection
+        """
+        self.conn = connection
+
+
+class JBOFManager:
+    """Manages TrueNAS JBOF operations via TrueNAS WebSocket API.
+
+    Available methods                                   | implemented | planned | Job?
+    ----------------------------------------------------+-------------+---------+------
+    jbof.create                                         |     No      |         | No
+    jbof.delete                                         |     No      |         | No
+    jbof.get_instance                                   |     No      |         | No
+    jbof.licensed                                       |     No      |         | No
+    jbof.query                                          |     No      |         | No
+    jbof.reapply_config                                 |     No      |         | No
+    jbof.update                                         |     No      |         | No
+
+    """
+
+    def __init__(self, connection: TrueNASConnection):
+        """Initialize JBOF manager.
+
+        Args:
+            connection: Authenticated TrueNAS connection
+        """
+        self.conn = connection
+
+
+class NetworkManager:
+    """Manages TrueNAS Network operations via TrueNAS WebSocket API.
+
+    Available methods                                   | implemented | planned | Job?
+    ----------------------------------------------------+-------------+---------+------
+    network.configuration.activity_choices              |     No      |         | No
+    network.configuration.config                        |     No      |         | No
+    network.configuration.update                        |     No      |         | No
+    network.general.summary                             |     No      |         | No
+
+    """
+
+    def __init__(self, connection: TrueNASConnection):
+        """Initialize Network manager.
+
+        Args:
+            connection: Authenticated TrueNAS connection
+        """
+        self.conn = connection
+
+
+class RouteManager:
+    """Manages TrueNAS route operations via TrueNAS WebSocket API.
+
+    Available methods                                   | implemented | planned | Job?
+    ----------------------------------------------------+-------------+---------+------
+    route.ipv4gw_reachable                              |     No      |         | No
+    route.system_routes                                 |     No      |         | No
+    staticroute.create                                  |     No      |         | No
+    staticroute.delete                                  |     No      |         | No
+    staticroute.get_instance                            |     No      |         | No
+    staticroute.query                                   |     No      |         | No
+    staticroute.update                                  |     No      |         | No
+
+    """
+
+    def __init__(self, connection: TrueNASConnection):
+        """Initialize route manager.
+
+        Args:
+            connection: Authenticated TrueNAS connection
+        """
+        self.conn = connection
+
+
+class SystemManager:
+    """Manages TrueNAS system operations via TrueNAS WebSocket API.
+
+    Available methods                                   | implemented | planned | Job?
+    ----------------------------------------------------+-------------+---------+------
+    system.boot_id                                      |     No      |         | No
+    system.build_time                                   |     No      |         | No
+    system.debug                                        |     No      |         | Yes
+    system.feature_enabled                              |     No      |         | No
+    system.host_id                                      |     No      |         | No
+    system.info                                         |     No      |         | No
+    system.is_stable                                    |     No      |         | No
+    system.license_update                               |     No      |         | No
+    system.product_type                                 |     No      |         | No
+    system.ready                                        |     No      |         | No
+    system.reboot                                       |     No      |         | Yes
+    system.release_notes_url                            |     No      |         | No
+    system.shutdown                                     |     No      |         | Yes
+    system.state                                        |     No      |         | No
+    system.version                                      |     No      |         | No
+    system.version_short                                |     No      |         | No
+    system.advanced.config                              |     No      |         | No
+    system.advanced.get_gpu_pci_choices                 |     No      |         | No
+    system.advanced.login_banner                        |     No      |         | No
+    system.advanced.sed_global_password                 |     No      |         | No
+    system.advanced.sed_global_password_is_set          |     No      |         | No
+    system.advanced.serial_port_choices                 |     No      |         | No
+    system.advanced.syslog_certificate_authority_choices|     No      |         | No
+    system.advanced.syslog_certificate_choices          |     No      |         | No
+    system.advanced.update                              |     No      |         | No
+    system.advanced.update_gpu_pci_ids                  |     No      |         | No
+    system.general.checkin                              |     No      |         | No
+    system.general.checkin_waiting                      |     No      |         | No
+    system.general.config                               |     No      |         | No
+    system.general.country_choices                      |     No      |         | No
+    system.general.kbdmap_choices                       |     No      |         | No
+    system.general.language_choices                     |     No      |         | No
+    system.general.local_url                            |     No      |         | No
+    system.general.timezone_choices                     |     No      |         | No
+    system.general.ui_address_choices                   |     No      |         | No
+    system.general.ui_certificate_choices               |     No      |         | No
+    system.general.ui_httpsprotocols_choices            |     No      |         | No
+    system.general.ui_restart                           |     No      |         | No
+    system.general.ui_v6address_choices                 |     No      |         | No
+    system.general.update                               |     No      |         | No
+    system.global.id                                    |     No      |         | No
+    system.ntpserver.create                             |     No      |         | No
+    system.ntpserver.delete                             |     No      |         | No
+    system.ntpserver.get_instance                       |     No      |         | No
+    system.ntpserver.query                              |     No      |         | No
+    system.ntpserver.update                             |     No      |         | No
+    system.security.config                              |     No      |         | No
+    system.security.update                              |     No      |         | Yes
+    system.security.info.fips_available                 |     No      |         | No
+    system.security.info.fips_enabled                   |     No      |         | No
+
+    """
+
+    def __init__(self, connection: TrueNASConnection):
+        """Initialize system manager.
+
+        Args:
+            connection: Authenticated TrueNAS connection
+        """
+        self.conn = connection
+
+
+class SystemDatasetManager:
+    """Manages TrueNAS system dataset operations via TrueNAS WebSocket API.
+
+    Available methods                                   | implemented | planned | Job?
+    ----------------------------------------------------+-------------+---------+------
+    systemdataset.config                                |     No      |         | No
+    systemdataset.pool_choices                          |     No      |         | No
+    systemdataset.update                                |     No      |         | Yes
+
+    """
+
+    def __init__(self, connection: TrueNASConnection):
+        """Initialize system dataset manager.
+
+        Args:
+            connection: Authenticated TrueNAS connection
+        """
+        self.conn = connection
+
+
+class TrueNASManager:
+    """Manages TrueNAS TrueNAS operations via TrueNAS WebSocket API.
+
+    Available methods                                   | implemented | planned | Job?
+    ----------------------------------------------------+-------------+---------+------
+    truenas.accept_eula                                 |     No      |         | No
+    truenas.get_chassis_hardware                        |     No      |         | No
+    truenas.get_customer_information                    |     No      |         | No
+    truenas.get_eula                                    |     No      |         | No
+    truenas.is_eula_accepted                            |     No      |         | No
+    truenas.is_ix_hardware                              |     No      |         | No
+    truenas.is_production                               |     No      |         | No
+    truenas.managed_by_truecommand                      |     No      |         | No
+    truenas.set_production                              |     No      |         | Yes
+    truenas.update_customer_information                 |     No      |         | No
+
+    """
+
+    def __init__(self, connection: TrueNASConnection):
+        """Initialize TrueNAS manager.
+
+        Args:
+            connection: Authenticated TrueNAS connection
+        """
+        self.conn = connection
+
+
+class TunableManager:
+    """Manages TrueNAS tunable operations via TrueNAS WebSocket API.
+
+    Available methods                                   | implemented | planned | Job?
+    ----------------------------------------------------+-------------+---------+------
+    tunable.create                                      |     No      |         | Yes
+    tunable.delete                                      |     No      |         | Yes
+    tunable.get_instance                                |     No      |         | No
+    tunable.query                                       |     No      |         | No
+    tunable.tunable_type_choices                        |     No      |         | No
+    tunable.update                                      |     No      |         | Yes
+
+    """
+
+    def __init__(self, connection: TrueNASConnection):
+        """Initialize tunable manager.
+
+        Args:
+            connection: Authenticated TrueNAS connection
+        """
+        self.conn = connection
+
+
+class UpdateManager:
+    """Manages TrueNAS update operations via TrueNAS WebSocket API.
+
+    Available methods                                   | implemented | planned | Job?
+    ----------------------------------------------------+-------------+---------+------
+    update.check_available                              |     No      |         | No
+    update.download                                     |     No      |         | Yes
+    update.file                                         |     No      |         | Yes
+    update.get_auto_download                            |     No      |         | No
+    update.get_pending                                  |     No      |         | No
+    update.get_trains                                   |     No      |         | No
+    update.manual                                       |     No      |         | Yes
+    update.set_auto_download                            |     No      |         | No
+    update.set_train                                    |     No      |         | No
+    update.update                                       |     No      |         | Yes
+
+    """
+
+    def __init__(self, connection: TrueNASConnection):
+        """Initialize update manager.
+
+        Args:
+            connection: Authenticated TrueNAS connection
+        """
+        self.conn = connection
